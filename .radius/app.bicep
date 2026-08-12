@@ -75,7 +75,7 @@ resource todoContainer 'Radius.Compute/containers@2025-08-01-preview' = {
         image: todoImage.properties.imageReference
         ports: {
           web: {
-            containerPort: 3000
+            port: 3000
           }
         }
         env: {
