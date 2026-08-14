@@ -264,11 +264,6 @@ jobs:
           pin_kube_recipe Radius.Compute/persistentVolumes persistentvolumes
           pin_kube_recipe Radius.Compute/routes routes
           pin_kube_recipe Radius.Security/secrets secrets
-          # STOPGAP (radius-project/radius#12686): the pinned Azure recipe pack
-          # added a rabbitMQ kube recipe that upstream's pin list does not cover,
-          # so the mutable-tag guard below fails every deploy. Remove this line
-          # once the upstream template pins it (or derives the list from the pack).
-          pin_kube_recipe Radius.Messaging/rabbitMQ rabbitmq
           if grep -Eq 'ghcr\.io/radius-project/kube-recipes/[^'"'"']+:latest' "$ENV_BICEP"; then
             echo "ERROR: the Azure recipe pack still contains a mutable kube recipe tag." >&2
             exit 1
