@@ -14,6 +14,25 @@ param registryUsername string
 @secure()
 param registryPassword string
 
+@description('Hostname of the SMTP server the notifier sends email through.')
+param smtpHost string
+
+@description('Port of the SMTP server the notifier sends email through.')
+param smtpPort string = '587'
+
+@description('Username used to authenticate to the SMTP server.')
+param smtpUser string
+
+@description('Password used to authenticate to the SMTP server.')
+@secure()
+param smtpPassword string
+
+@description('From address used on todo notification emails.')
+param notifyFrom string
+
+@description('Recipient address for todo notification emails.')
+param notifyTo string
+
 resource todoApp 'Radius.Core/applications@2025-08-01-preview' = {
   name: 'todo-list-app'
   properties: {
@@ -60,7 +79,7 @@ resource todoImage 'Radius.Compute/containerImages@2025-08-01-preview' = {
     application: todoApp.id
     codeReference: 'Dockerfile'
     build: {
-      source: 'git::https://github.com/kachawla/todo-list-app-copy.git?ref=219f324a1aeaa34de808fd56aa6aa6b08e5449aa'
+      source: 'git::https://github.com/kachawla/todo-list-app-copy.git?ref=16e7630f7eabcccc06b689361d4e522a4ee843d3'
       // The Dockerfile has no FROM --platform=$BUILDPLATFORM / TARGETARCH
       // cross-compilation support, so restrict the build to the cluster node arch.
       platforms: [
@@ -71,6 +90,71 @@ resource todoImage 'Radius.Compute/containerImages@2025-08-01-preview' = {
   dependsOn: [
     registryCreds
   ]
+}
+
+resource notifierImage 'Radius.Compute/containerImages@2025-08-01-preview' = {
+  name: 'notifier-image'
+  properties: {
+    environment: environment
+    application: todoApp.id
+    codeReference: 'services/notifier/Dockerfile'
+    build: {
+      source: 'git::https://github.com/kachawla/todo-list-app-copy.git//services/notifier?ref=16e7630f7eabcccc06b689361d4e522a4ee843d3'
+      // The Dockerfile has no FROM --platform=$BUILDPLATFORM / TARGETARCH
+      // cross-compilation support, so restrict the build to the cluster node arch.
+      platforms: [
+        'linux/amd64'
+      ]
+    }
+  }
+  dependsOn: [
+    registryCreds
+  ]
+}
+
+resource notifierContainer 'Radius.Compute/containers@2025-08-01-preview' = {
+  name: 'notifier'
+  properties: {
+    environment: environment
+    application: todoApp.id
+    codeReference: 'services/notifier/src/index.js#L67'
+    containers: {
+      notifier: {
+        image: notifierImage.properties.imageReference
+        ports: {
+          web: {
+            containerPort: 3001
+          }
+        }
+        env: {
+          PORT: {
+            value: '3001'
+          }
+          SMTP_HOST: {
+            value: smtpHost
+          }
+          SMTP_PORT: {
+            value: smtpPort
+          }
+          SMTP_SECURE: {
+            value: 'false'
+          }
+          SMTP_USER: {
+            value: smtpUser
+          }
+          SMTP_PASSWORD: {
+            value: smtpPassword
+          }
+          NOTIFY_FROM: {
+            value: notifyFrom
+          }
+          NOTIFY_TO: {
+            value: notifyTo
+          }
+        }
+      }
+    }
+  }
 }
 
 resource todoContainer 'Radius.Compute/containers@2025-08-01-preview' = {
@@ -99,6 +183,9 @@ resource todoContainer 'Radius.Compute/containers@2025-08-01-preview' = {
           }
           MYSQL_DB: {
             value: 'todos'
+          }
+          NOTIFIER_URL: {
+            value: 'http://${notifierContainer.properties.hosts['notifier']}:3001'
           }
         }
       }
