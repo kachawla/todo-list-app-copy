@@ -1,0 +1,76 @@
+namespace: Radius.Resources
+types:
+  azureEmailServices:
+    description: |
+      The Radius.Resources/azureEmailServices Resource Type provisions an Azure Communication Services Email resource with an Azure-managed sender domain, so an application can send transactional email without operating or credentialing an SMTP server.
+
+      The recipe returns the sender address to send from and delivers the Communication Services connection string through the managed secret.
+
+      ```bicep
+      resource emailService 'Radius.Resources/azureEmailServices@2025-08-01-preview' = {
+        name: 'email'
+        properties: {
+          environment: environment
+          application: myApplication.id
+          dataLocation: 'United States'
+          senderUsername: 'donotreply'
+        }
+      }
+      ```
+
+      Bind the connection string into a container through the managed secret, and read the sender address directly:
+
+      ```bicep
+      env: {
+        NOTIFY_FROM: {
+          value: emailService.properties.senderAddress
+        }
+        COMMUNICATION_SERVICES_CONNECTION_STRING: {
+          valueFrom: {
+            secretKeyRef: {
+              secretName: emailService.properties.secrets.name
+              key: 'connectionString'
+            }
+          }
+        }
+      }
+      ```
+    apiVersions:
+      '2025-08-01-preview':
+        schema:
+          type: object
+          properties:
+            environment:
+              type: string
+              description: "(Required) The Radius Environment ID. Typically set by the rad CLI. Typical value should be `environment`."
+            application:
+              type: string
+              description: "(Optional) The Radius Application ID. `myApplication.id` for example."
+            dataLocation:
+              type: string
+              default: United States
+              description: "(Optional) The Azure Communication Services data residency location that stores the service data. Defaults to `United States`."
+            senderUsername:
+              type: string
+              default: donotreply
+              description: "(Optional) The mailbox username on the Azure-managed sender domain that email is sent from. Defaults to `donotreply`."
+            senderAddress:
+              type: string
+              readOnly: true
+              description: (Read Only) The full sender email address on the Azure-managed domain. Mapped from the recipe module's output.
+            secrets:
+              type: object
+              description: >-
+                (Read Only) Recipe-generated secrets. The reserved `name` sub-property references
+                the managed Radius.Security/secrets resource Radius materializes from the Recipe's
+                `outputs.secrets`. Consumers bind a key into a container env var via `secretKeyRef`.
+              properties:
+                name:
+                  type: string
+                  readOnly: true
+                  description: (Read Only) Name of the managed Radius.Security/secrets resource. Use as `secretName` in a container `secretKeyRef`.
+                connectionString:
+                  type: string
+                  readOnly: true
+                  description: (Read Only) The Azure Communication Services connection string used to authenticate the Email client, delivered through the managed secret.
+          required: [environment]

@@ -35,6 +35,105 @@
       "connections": [
         {
           "direction": "Inbound",
+          "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containers/todo-list-app",
+          "kind": "Dependency"
+        },
+        {
+          "direction": "Outbound",
+          "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containerImages/notifier-image",
+          "kind": "Dependency"
+        }
+      ],
+      "diffHash": "sha256:6d7d420ffd20082bd932c055059f65ee068c7aed44c493030946ed4e623bd165",
+      "iconHash": "b15466644c2efcfae34f31c914d0926d10ac1fe641d730f5b0f25955f2b9b5a9",
+      "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containers/notifier",
+      "name": "notifier",
+      "outputResources": [],
+      "properties": {
+        "application": "[reference('todoApp').id]",
+        "codeReference": "services/notifier/src/index.js#L67",
+        "containers": {
+          "notifier": {
+            "env": {
+              "NOTIFY_FROM": {
+                "value": "[parameters('notifyFrom')]"
+              },
+              "NOTIFY_TO": {
+                "value": "[parameters('notifyTo')]"
+              },
+              "PORT": {
+                "value": "3001"
+              },
+              "SMTP_HOST": {
+                "value": "[parameters('smtpHost')]"
+              },
+              "SMTP_PASSWORD": {
+                "value": null
+              },
+              "SMTP_PORT": {
+                "value": "[parameters('smtpPort')]"
+              },
+              "SMTP_SECURE": {
+                "value": "false"
+              },
+              "SMTP_USER": {
+                "value": "[parameters('smtpUser')]"
+              }
+            },
+            "image": "[reference('notifierImage').properties.imageReference]",
+            "ports": {
+              "web": {
+                "containerPort": 3001
+              }
+            }
+          }
+        },
+        "environment": "[parameters('environment')]"
+      },
+      "provisioningState": "NotSpecified",
+      "type": "Radius.Compute/containers"
+    },
+    {
+      "connections": [
+        {
+          "direction": "Inbound",
+          "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containers/notifier",
+          "kind": "Dependency"
+        },
+        {
+          "direction": "Outbound",
+          "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Security/secrets/radius-ghcr-registry-creds",
+          "kind": "Dependency"
+        }
+      ],
+      "diffHash": "sha256:ec8f645a387a4318155d8231bdded199caf159faf8461f49d8b2164d2cc7fac2",
+      "iconHash": "48a16548bd45c8c45db8c975308cf587a76a4c1b18d88bce9ced7d5b78095edf",
+      "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containerImages/notifier-image",
+      "name": "notifier-image",
+      "outputResources": [],
+      "properties": {
+        "application": "[reference('todoApp').id]",
+        "build": {
+          "platforms": [
+            "linux/amd64"
+          ],
+          "source": "git::https://github.com/kachawla/todo-list-app-copy.git//services/notifier?ref=16e7630f7eabcccc06b689361d4e522a4ee843d3"
+        },
+        "codeReference": "services/notifier/Dockerfile",
+        "environment": "[parameters('environment')]"
+      },
+      "provisioningState": "NotSpecified",
+      "type": "Radius.Compute/containerImages"
+    },
+    {
+      "connections": [
+        {
+          "direction": "Inbound",
+          "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containerImages/notifier-image",
+          "kind": "Dependency"
+        },
+        {
+          "direction": "Inbound",
           "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containerImages/todo-list-app-image",
           "kind": "Dependency"
         }
@@ -66,11 +165,16 @@
         },
         {
           "direction": "Outbound",
+          "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containers/notifier",
+          "kind": "Dependency"
+        },
+        {
+          "direction": "Outbound",
           "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Data/mySqlDatabases/mysql",
           "kind": "Dependency"
         }
       ],
-      "diffHash": "sha256:8fbdbfb803ece8489559916ffa531537652e432812e8afaa717258ca8e0ac202",
+      "diffHash": "sha256:3ebb3fb55658549098747e1dac7ceee000516796cff74d25f293bf806be03d35",
       "iconHash": "b15466644c2efcfae34f31c914d0926d10ac1fe641d730f5b0f25955f2b9b5a9",
       "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containers/todo-list-app",
       "name": "todo-list-app",
@@ -92,6 +196,9 @@
               },
               "MYSQL_USER": {
                 "value": "myadmin"
+              },
+              "NOTIFIER_URL": {
+                "value": "[format('http://{0}:3001', reference('notifierContainer').properties.hosts.notifier)]"
               }
             },
             "image": "[reference('todoImage').properties.imageReference]",
@@ -120,7 +227,7 @@
           "kind": "Dependency"
         }
       ],
-      "diffHash": "sha256:84bde9da427d625ffc2cb8c856c36e5b977010d4a8ce44958cdf11d1147d679c",
+      "diffHash": "sha256:8f9c00d5120f313fdccf8711abe2281b77bf879f4e37819aec5954c8018bb6a2",
       "iconHash": "48a16548bd45c8c45db8c975308cf587a76a4c1b18d88bce9ced7d5b78095edf",
       "id": "/planes/radius/local/resourcegroups/default/providers/Radius.Compute/containerImages/todo-list-app-image",
       "name": "todo-list-app-image",
@@ -131,7 +238,7 @@
           "platforms": [
             "linux/amd64"
           ],
-          "source": "git::https://github.com/kachawla/todo-list-app-copy.git?ref=219f324a1aeaa34de808fd56aa6aa6b08e5449aa"
+          "source": "git::https://github.com/kachawla/todo-list-app-copy.git?ref=16e7630f7eabcccc06b689361d4e522a4ee843d3"
         },
         "codeReference": "Dockerfile",
         "environment": "[parameters('environment')]"
