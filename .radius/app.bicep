@@ -185,18 +185,10 @@ resource todoContainer 'Radius.Compute/containers@2025-08-01-preview' = {
             value: 'todos'
           }
           NOTIFIER_URL: {
-            // The pinned radius extension (0.60.0-rc1) does not expose the
-            // containers `hosts` output, so address the notifier by the Service
-            // name its recipe assigns: '<resource-name>-<containerKey>'. The
-            // dependsOn below preserves the ordering the hosts reference would
-            // have created.
-            value: 'http://notifier-notifier:3001'
+            value: 'http://${notifierContainer.properties.hosts['notifier']}:3001'
           }
         }
       }
     }
   }
-  dependsOn: [
-    notifierContainer
-  ]
 }
