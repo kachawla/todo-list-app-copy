@@ -12,28 +12,9 @@ services:
       MYSQL_USER: root
       MYSQL_PASSWORD: secret
       MYSQL_DB: todos
-      NOTIFIER_URL: http://notifier:3001
-
-  notifier:
-    image: node:22-alpine
-    command: sh -c "yarn install && node src/index.js"
-    working_dir: /app
-    volumes:
-      - ./services/notifier:/app
-    environment:
-      PORT: 3001
-      # mailhog is a local development mail catcher; deployments point these at
-      # a real SMTP provider.
-      SMTP_HOST: mailhog
-      SMTP_PORT: 1025
-      SMTP_SECURE: 'false'
-      NOTIFY_FROM: todo-app@example.com
+      # Email notifications stay disabled locally: without an Azure
+      # Communication Services connection the app skips sending.
       NOTIFY_TO: todo-owner@example.com
-
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    ports:
-      - 127.0.0.1:8025:8025
 
   mysql:
     image: mysql:8.0
