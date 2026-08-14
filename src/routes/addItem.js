@@ -1,5 +1,6 @@
 const db = require('../persistence');
 const {v4 : uuid} = require('uuid');
+const { notify } = require('../notifications');
 
 module.exports = async (req, res) => {
     const item = {
@@ -9,5 +10,6 @@ module.exports = async (req, res) => {
     };
 
     await db.storeItem(item);
+    notify('created', item);
     res.send(item);
 };
